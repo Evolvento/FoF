@@ -104,7 +104,7 @@ class Controller:
         return self.strategy.search(profile)
 
 
-bot = telebot.TeleBot('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw')
+bot = telebot.TeleBot('token')
 menu = Menu()
 
 
@@ -113,7 +113,8 @@ def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     create_account = types.KeyboardButton('Создать профиль')
     markup.add(create_account)
-    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или потрахаться', reply_markup=markup)
+    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или потрахаться', 
+                     reply_markup=markup)
     id = message.from_user.id
     bot.register_next_step_handler(message, name)
 
@@ -174,10 +175,20 @@ def photo(message):
 
 @bot.message_handler(content_types=['photo'])
 def get_user_photo(message):
-    photo = message.photo
+    photography = message.photo
 
 
 def about_me(message):
     bot.send_message(message.chat.id, 'Расскажи о себе')
+    bot.register_next_step_handler(message, get_about_me)
+    bot.register_next_step_handler(message, finish)
+    
+    
+def get_about_me(message):
+    info = message.text
+    
+    
+def finish(message):
+    bot.send_message(message.chat.id, 'Анкета успешна создана')
 
 bot.polling(none_stop=True, interval=0)
