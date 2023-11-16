@@ -10,21 +10,23 @@ class DataAccessObject:
         return cls.__instance
 
     def __init__(self):
-        self.connection = sqlite3.connect('my_database.db')
+        self.connection = sqlite3.connect('db.sqlite3')
         self.dao = self.connection.cursor()
         self.dao.execute('''
             CREATE TABLE IF NOT EXISTS OurDataBase (
-            telegram_id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            gender TEXT NOT NULL,
-            mode TEXT NOT NULL,
+            telegram_id TEXT NOT NULL PRIMARY KEY,
+            name TEXT,
+            gender TEXT,
             age INTEGER,
-            information TEXT NOT NULL
+            mode TEXT,
+            information TEXT
             )
         ''')
+        self.connection.commit()
 
-    def create_user(self, profile):
-        self.dao.execute("INSERT INTO OurDataBase VALUES(?, ?, ?, ?, ?, ?)", (profile.get_telegram_id(), profile.get_name(), profile.get_gender(), profile.get_mode(), profile.get_age(), profile.get_information()))
+    def create_user(self, telegram_id, name, gender, age, mode, information):
+        self.dao.execute('INSERT or REPLACE INTO OurDataBase(telegram_id, name, gender, age, mode, information) VALUES(?, ?, ?, ?, ?, ?)', (telegram_id, name, gender, age, mode, information))
+        self.connection.commit()
 
     def edit_user(self, profile):
         #self.dao.execute("SELECT * FROM OurDataBase WHERE telegramid = ?", profile.telegram_id)
@@ -40,6 +42,7 @@ class DataAccessObject:
         self.connection.close()
 
     def show_base(self):
+        self.dao.execute('SELECT * FROM OurDataBase')
         result = self.dao.fetchall()
         for row in result:
             print(row)
