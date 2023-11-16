@@ -97,7 +97,7 @@ class Controller:
         return self.strategy.search(profile)
 
 
-bot = telebot.TeleBot('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw')
+bot = telebot.TeleBot('token')
 menu = Menu()
 
 if True:
@@ -142,6 +142,7 @@ def mode(message):
 @bot.message_handler(content_types=['photo'])
 def get_user_photo(message):
     pass
+    
 DAO = DataAccessObject()
 
 bot.polling(none_stop=True, interval=0)
