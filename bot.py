@@ -102,39 +102,46 @@ menu = Menu()
 
 if True:
     @bot.message_handler(commands=['start'])
-    def start(message):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        create_profile = types.KeyboardButton('Создать профиль')
-        markup.add(create_profile)
-        bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или познакомиться', reply_markup=markup)
-        id = message.from_user.id
-        bot.register_next_step_handler(message, name)
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    create_account = types.KeyboardButton('Создать профиль')
+    markup.add(create_account)
+    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или потрахаться', reply_markup=markup)
+    id = message.from_user.id
+    bot.register_next_step_handler(message, name)
 
 
-    @bot.message_handler(commands=['name'])
-    # def create_profile(message):
-    #     menu.create_profile()
-    #     bot.send_message(message.chat.id, 'Ты вроде создал профиль', reply_markup=markup)
-    #     bot.register_next_step_handler(message, name)
+def name(message):
+    bot.send_message(message.chat.id, 'Напиши имя')
+    bot.register_next_step_handler(message, gender)
 
 
-    def name(message):
-        bot.send_message(message.chat.id, 'Напиши имя')
-        menu.profile.set_name(message.text)
-        bot.register_next_step_handler(message, age)
-        return message.text
+def gender(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    man = types.KeyboardButton('♂ М')
+    woman = types.KeyboardButton('♀ Ж')
+    markup.add(man, woman)
+    bot.send_message(message.chat.id, 'Выбери пол', reply_markup=markup)
+    bot.register_next_step_handler(message, age)
 
 
-    def age(message):
-        bot.send_message(message.chat.id, 'Сколько тебе лет?')
-        bot.register_next_step_handler(message)
+def age(message):
+    bot.send_message(message.chat.id, 'Сколько тебе лет?')
+    bot.register_next_step_handler(message, mode)
+
+
+def mode(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    favorite = types.KeyboardButton('❤')
+    fight = types.KeyboardButton('👊')
+    markup.add(favorite, fight)
+    bot.send_message(message.chat.id, 'Укажи свой интерес', reply_markup=markup)
+    # bot.register_next_step_handler(message)
 
 
 @bot.message_handler(content_types=['photo'])
 def get_user_photo(message):
     pass
-
-
 DAO = DataAccessObject()
 
 bot.polling(none_stop=True, interval=0)
