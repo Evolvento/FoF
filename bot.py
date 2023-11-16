@@ -1,34 +1,8 @@
 import telebot
 import sqlite3
+from db import DataAccessObject
 from telebot import types
 from abc import ABC, abstractmethod
-
-bot = telebot.TeleBot('token')
-
-if True:
-    @bot.message_handler(commands=['start'])
-    def start(message):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        create_account = types.KeyboardButton('Создать профиль')
-        markup.add(create_account)
-        bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или потрахаться', reply_markup=markup)
-        id = message.from_user.id
-        bot.register_next_step_handler(message, name)
-
-
-    def name(message):
-        bot.send_message(message.chat.id, 'Напиши имя')
-        bot.register_next_step_handler(message, age)
-
-
-    def age(message):
-        bot.send_message(message.chat.id, 'Сколько тебе лет?')
-        bot.register_next_step_handler(message)
-
-
-@bot.message_handler(content_types=['photo'])
-def get_user_photo(message):
-    pass
 
 
 class Menu:
@@ -52,11 +26,15 @@ class Menu:
 
 class Profile:
     def __init__(self):
+        self.__telegram_id = None
         self.__name = None
         self.__age = None
         self.__gender = None
         self.__mode = None
         self.__active = False
+
+    def set_telegram_id(self, telegram_id):
+        self.__telegram_id = telegram_id
 
     def set_name(self, name):
         self.__name = name
@@ -72,6 +50,9 @@ class Profile:
 
     def change_active(self):
         self.__active = not self.__active
+
+    def get_telegram_id(self):
+        return self.__telegram_id
 
     def get_name(self):
         return self.__name
@@ -116,29 +97,45 @@ class Controller:
         return self.strategy.search(profile)
 
 
-connection = sqlite3.connect('my_database.db')
-dao = connection.cursor()
-dao.execute('''
-CREATE TABLE IF NOT EXISTS OurDataBase (
-id INTEGER PRIMARY KEY,
-fullname TEXT NOT NULL,
-telegramid TEXT NOT NULL,
-age INTEGER
-height INTEGER
-weight INTEGER
-information TEXT NOT NULL
-)
-''')
-#dao.execute('CREATE INDEX telid ON OurDataBase (telegramid)')
-dao.execute('INSERT or IGNORE INTO OurDataBase (id, fullname, telegramid, age) VALUES (?, ?, ?, ?)', (0, 'sharik', '5', 5))
-dao.execute('INSERT or IGNORE INTO OurDataBase (id, fullname, telegramid, age) VALUES (?, ?, ?, ?)', (1, 'butilka', '4', 4))
-dao.execute('UPDATE OurDataBase SET telegramid = ? WHERE fullname = ?', ('0', 'jopa'))
-dao.execute('SELECT * FROM OurDataBase')
-users = dao.fetchall()
-for user in users:
-    print(user)
-connection.commit()
-connection.close()
+bot = telebot.TeleBot('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw')
+menu = Menu()
 
+if True:
+    @bot.message_handler(commands=['start'])
+    def start(message):
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        create_profile = types.KeyboardButton('Создать профиль')
+        markup.add(create_profile)
+        bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или познакомиться', reply_markup=markup)
+        id = message.from_user.id
+        bot.register_next_step_handler(message, name)
+
+
+    @bot.message_handler(commands=['name'])
+    # def create_profile(message):
+    #     menu.create_profile()
+    #     bot.send_message(message.chat.id, 'Ты вроде создал профиль', reply_markup=markup)
+    #     bot.register_next_step_handler(message, name)
+
+
+    def name(message):
+        bot.send_message(message.chat.id, 'Напиши имя')
+        menu.profile.set_name(message.text)
+        bot.register_next_step_handler(message, age)
+        return message.text
+
+
+    def age(message):
+        bot.send_message(message.chat.id, 'Сколько тебе лет?')
+        bot.register_next_step_handler(message)
+
+
+@bot.message_handler(content_types=['photo'])
+def get_user_photo(message):
+    pass
+
+
+DAO = DataAccessObject()
 
 bot.polling(none_stop=True, interval=0)
+
