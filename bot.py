@@ -16,7 +16,7 @@ def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     create_account = types.KeyboardButton('Создать профиль')
     markup.add(create_account)
-    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или потрахаться',
+    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или подружиться',
                      reply_markup=markup)
     id = message.from_user.id
     menu.profile.set_telegram_id(id)
