@@ -52,8 +52,8 @@ def get_name(message):
 
 def gender(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    man = types.KeyboardButton('♂️')
-    woman = types.KeyboardButton('♀️')
+    man = types.KeyboardButton('male')
+    woman = types.KeyboardButton('female')
     markup.add(man, woman)
     bot.send_message(message.chat.id, 'Выбери пол', reply_markup=markup)
     bot.register_next_step_handler(message, get_gender)
@@ -145,11 +145,17 @@ def main_buttons(message):
                                       '🚪 - перестать кого-либо искать', reply_markup=markup)
 
 
+@bot.message_handler(func=lambda m: m.text == "👀")
+def show_my_profile(message):
+    info(message)
+
+
+
 def info(message):
     photography = open('Files/photo_{}.jpg'.format(DataAccessObject().get_user(message.from_user.id)[6]), 'rb')
     bot.send_photo(message.chat.id, photography, f'{DataAccessObject().get_user(message.from_user.id)[1]}, '
-                                                 f'{DataAccessObject().get_user(message.from_user.id)[3]}, \n'
+                                                 f'{DataAccessObject().get_user(message.from_user.id)[3]} \n'
                                                  f'{DataAccessObject().get_user(message.from_user.id)[5]}')
-
+    main_buttons(message)
 
 bot.polling(none_stop=True, interval=0)
