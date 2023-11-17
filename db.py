@@ -9,7 +9,7 @@ class DataAccessObject:
             cls.__instance = super().__new__(cls)
         return cls.__instance
 
-        def __init__(self):
+    def __init__(self):
         self.connection = sqlite3.connect('db.sqlite3')
         self.dao = self.connection.cursor()
         self.dao.execute('''
