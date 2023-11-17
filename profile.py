@@ -5,6 +5,7 @@ class Profile:
         self.__age = None
         self.__gender = None
         self.__mode = None
+        self.__photo = None
         self.__information = None
         self.__active = False
         self.__liked = []
@@ -23,6 +24,9 @@ class Profile:
 
     def set_mode(self, mode):
         self.__mode = mode
+
+    def set_photo(self, photo):
+        self.__photo = photo
 
     def set_information(self, information):
         self.__information = information
@@ -47,6 +51,9 @@ class Profile:
 
     def get_mode(self):
         return self.__mode
+
+    def get_photo(self):
+        return self.__photo
 
     def get_information(self):
         return self.__information
