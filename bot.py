@@ -1,5 +1,6 @@
 import telebot
 import sqlite3
+import requests
 from db import DataAccessObject
 from telebot import types
 from menu import Menu
@@ -99,7 +100,7 @@ def photo(message):
 @bot.message_handler(content_types=['photo'])
 def get_user_photo(message):
     file_info = bot.get_file(message.photo[-1].file_id)
-    file = requests.get('https://api.telegram.org/file/bot{}/{}'.format('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw', file_info.file_path))
+    file = requests.get('https://api.telegram.org/file/bot{}/{}'.format('token', file_info.file_path))
     filename = 'Files/photo_{}.jpg'.format(file_info.file_id)
     menu.array_profiles[message.from_user.id].set_photo(file_info.file_id)
     with open(filename, 'wb') as f:
