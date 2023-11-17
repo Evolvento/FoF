@@ -9,7 +9,7 @@ class DataAccessObject:
             cls.__instance = super().__new__(cls)
         return cls.__instance
 
-    def __init__(self):
+        def __init__(self):
         self.connection = sqlite3.connect('db.sqlite3')
         self.dao = self.connection.cursor()
         self.dao.execute('''
@@ -19,13 +19,16 @@ class DataAccessObject:
             gender TEXT,
             age INTEGER,
             mode TEXT,
-            information TEXT
+            information TEXT,
+            photo TEXT
             )
         ''')
         self.connection.commit()
 
-    def create_user(self, telegram_id, name, gender, age, mode, information):
-        self.dao.execute('INSERT or REPLACE INTO OurDataBase(telegram_id, name, gender, age, mode, information) VALUES(?, ?, ?, ?, ?, ?)', (telegram_id, name, gender, age, mode, information))
+    def create_user(self, telegram_id, name, gender, age, mode, information, photo):
+        self.dao.execute(
+            'INSERT or REPLACE INTO OurDataBase(telegram_id, name, gender, age, mode, information, photo) VALUES(?, ?, ?, ?, ?, ?, ?)',
+            (telegram_id, name, gender, age, mode, information, photo))
         self.connection.commit()
 
     def edit_user(self, profile):
@@ -49,8 +52,13 @@ class DataAccessObject:
             self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY gender HAVING gender IS NOT ?', (gender))
         self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY age HAVING age >= ? AND age <= ?', (delta_age, delta_age))
         return self.dao.fetchall()
+    
     def show_base(self):
         self.dao.execute('SELECT * FROM OurDataBase')
         result = self.dao.fetchall()
         for row in result:
             print(row)
+
+    def get_user(self, telegram_id):
+        self.dao.execute(f'SELECT * FROM OurDataBase WHERE telegram_id = {telegram_id}')
+        return self.dao.fetchone()
