@@ -31,7 +31,7 @@ def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     create_account = types.KeyboardButton('Создать профиль')
     markup.add(create_account)
-    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или подружиться',
+    bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти, с кем подраться или подружиться',
                      reply_markup=markup)
     menu.array_profiles[message.from_user.id] = Profile()
     menu.array_profiles[message.from_user.id].set_telegram_id(message.from_user.id)
@@ -51,8 +51,8 @@ def get_name(message):
 
 def gender(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    man = types.KeyboardButton('male')
-    woman = types.KeyboardButton('female')
+    man = types.KeyboardButton('♂️')
+    woman = types.KeyboardButton('♀️')
     markup.add(man, woman)
     bot.send_message(message.chat.id, 'Выбери пол', reply_markup=markup)
     bot.register_next_step_handler(message, get_gender)
@@ -77,8 +77,8 @@ def get_age(message):
 
 def mode(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    favorite = types.KeyboardButton('love')
-    fight = types.KeyboardButton('fight')
+    favorite = types.KeyboardButton('❤')
+    fight = types.KeyboardButton('👊')
     markup.add(favorite, fight)
     bot.send_message(message.chat.id, 'Укажи свой интерес', reply_markup=markup)
     bot.register_next_step_handler(message, get_mode)
@@ -98,7 +98,13 @@ def photo(message):
 
 @bot.message_handler(content_types=['photo'])
 def get_user_photo(message):
-    photography = message.photo
+    file_info = bot.get_file(message.photo[-1].file_id)
+    file = requests.get('https://api.telegram.org/file/bot{}/{}'.format('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw', file_info.file_path))
+    filename = 'Files/photo_{}.jpg'.format(file_info.file_id)
+    menu.array_profiles[message.from_user.id].set_photo(file_info.file_id)
+    with open(filename, 'wb') as f:
+        f.write(file.content)
+    photography = file_info.file_id
 
 
 def about_me(message):
@@ -108,18 +114,41 @@ def about_me(message):
 
 
 def get_about_me(message):
-    info = message.text
-    menu.array_profiles[message.from_user.id].set_information(info)
+    information = message.text
+    menu.array_profiles[message.from_user.id].set_information(information)
 
 
 def finish(message):
     bot.send_message(message.chat.id, 'Анкета успешна создана')
     dao = DataAccessObject()
-    dao.create_user(menu.array_profiles[message.from_user.id].get_telegram_id(), menu.array_profiles[message.from_user.id].get_name(), menu.array_profiles[message.from_user.id].get_gender(), menu.array_profiles[message.from_user.id].get_age(), menu.array_profiles[message.from_user.id].get_mode(), menu.array_profiles[message.from_user.id].get_information())
+    dao.create_user(menu.array_profiles[message.from_user.id].get_telegram_id(),
+                    menu.array_profiles[message.from_user.id].get_name(),
+                    menu.array_profiles[message.from_user.id].get_gender(),
+                    menu.array_profiles[message.from_user.id].get_age(),
+                    menu.array_profiles[message.from_user.id].get_mode(),
+                    menu.array_profiles[message.from_user.id].get_information(),
+                    menu.array_profiles[message.from_user.id].get_photo())
     dao.show_base()
+    info(message)
+    main_buttons(message)
 
 
+def main_buttons(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    watch_account = types.KeyboardButton('👀')
+    start_search = types.KeyboardButton('🔍')
+    more_not_need = types.KeyboardButton('🚪')
+    markup.add(watch_account, start_search, more_not_need)
+    bot.send_message(message.chat.id, '👀 - посмотреть профиль \n'
+                                      '🔍 - начать поиск \n'
+                                      '🚪 - перестать кого-либо искать', reply_markup=markup)
 
+
+def info(message):
+    photography = open('Files/photo_{}.jpg'.format(DataAccessObject().get_user(message.from_user.id)[6]), 'rb')
+    bot.send_photo(message.chat.id, photography, f'{DataAccessObject().get_user(message.from_user.id)[1]}, '
+                                                 f'{DataAccessObject().get_user(message.from_user.id)[3]}, \n'
+                                                 f'{DataAccessObject().get_user(message.from_user.id)[5]}')
 
 
 bot.polling(none_stop=True, interval=0)
