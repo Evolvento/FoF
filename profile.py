@@ -7,6 +7,7 @@ class Profile:
         self.__mode = None
         self.__information = None
         self.__active = False
+        self.__liked = []
 
     def set_telegram_id(self, telegram_id):
         self.__telegram_id = telegram_id
@@ -25,6 +26,9 @@ class Profile:
 
     def set_information(self, information):
         self.__information = information
+
+    def append_liked(self, telegram_id):
+        self.__liked.append(telegram_id)
 
     def change_active(self):
         self.__active = not self.__active
@@ -49,3 +53,6 @@ class Profile:
 
     def get_active(self):
         return self.__active
+
+    def get_liked(self):
+        return self.__liked

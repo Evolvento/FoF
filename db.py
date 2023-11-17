@@ -30,7 +30,7 @@ class DataAccessObject:
 
     def edit_user(self, profile):
         #self.dao.execute("SELECT * FROM OurDataBase WHERE telegramid = ?", profile.telegram_id)
-        self.dao.execute("UPDATE OurDataBase SET (name, gender, mode, age information) VALUES (?, ?, ?, ?, ?) WHERE telegram_id = ?", (profile.get_name(), profile.get_gender(), profile.get_mode(), profile.get_age(), profile.get_information(), profile.get_telegram_id()))
+        self.dao.execute("UPDATE OurDataBase SET (name, gender, mode, age, information) VALUES (?, ?, ?, ?, ?) WHERE telegram_id = ?", (profile.get_name(), profile.get_gender(), profile.get_mode(), profile.get_age(), profile.get_information(), profile.get_telegram_id()))
 
     def delete_user(self, profile):
         self.dao.execute(f"DELETE FROM OurDataBase WHERE telegram_id = {profile}")
@@ -41,6 +41,14 @@ class DataAccessObject:
     def close_database(self):
         self.connection.close()
 
+    def return_profiles(self, delta_age, mode, gender):
+        self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY mode HAVING mode = ?', (mode),)
+        if mode == 'fight':
+            self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY gender HAVING gender IS ?', (gender),)
+        else:
+            self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY gender HAVING gender IS NOT ?', (gender))
+        self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY age HAVING age >= ? AND age <= ?', (delta_age, delta_age))
+        return self.dao.fetchall()
     def show_base(self):
         self.dao.execute('SELECT * FROM OurDataBase')
         result = self.dao.fetchall()

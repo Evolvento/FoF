@@ -2,13 +2,28 @@ import telebot
 import sqlite3
 from db import DataAccessObject
 from telebot import types
-from abc import ABC, abstractmethod
 from menu import Menu
+from profile import Profile
+from controller import Controller
+from strategy_love import StrategyLove
+from strategy_fight import StrategyFight
 
 
 bot = telebot.TeleBot('token')
 menu = Menu()
-menu.create_profile()
+
+
+def like(our_id, liked_id):
+    menu.array_profiles[liked_id].append_liked(our_id)
+
+
+def partner_search(telegram_id):
+    controller = Controller()
+    if menu.array_profiles[telegram_id].get_mode() == 'love':
+        controller.set_strategy(StrategyLove())
+    if menu.array_profiles[telegram_id].get_mode() == 'fight':
+        controller.set_strategy(StrategyFight())
+    return controller.execute(menu.array_profiles[telegram_id])
 
 
 @bot.message_handler(commands=['start'])
@@ -18,8 +33,8 @@ def start(message):
     markup.add(create_account)
     bot.send_message(message.chat.id, 'Я бот FoF. Здесь вы можете найти с кем подраться или подружиться',
                      reply_markup=markup)
-    id = message.from_user.id
-    menu.profile.set_telegram_id(id)
+    menu.array_profiles[message.from_user.id] = Profile()
+    menu.array_profiles[message.from_user.id].set_telegram_id(message.from_user.id)
     bot.register_next_step_handler(message, name)
 
 
@@ -31,7 +46,7 @@ def name(message):
 
 def get_name(message):
     nik = message.text
-    menu.profile.set_name(nik)
+    menu.array_profiles[message.from_user.id].set_name(nik)
 
 
 def gender(message):
@@ -46,7 +61,7 @@ def gender(message):
 
 def get_gender(message):
     gen = message.text
-    menu.profile.set_gender(gen)
+    menu.array_profiles[message.from_user.id].set_gender(gen)
 
 
 def age(message):
@@ -57,7 +72,7 @@ def age(message):
 
 def get_age(message):
     count_years = message.text
-    menu.profile.set_age(count_years)
+    menu.array_profiles[message.from_user.id].set_age(count_years)
 
 
 def mode(message):
@@ -72,7 +87,7 @@ def mode(message):
 
 def get_mode(message):
     mood = message.text
-    menu.profile.set_mode(mood)
+    menu.array_profiles[message.from_user.id].set_mode(mood)
 
 
 def photo(message):
@@ -94,14 +109,17 @@ def about_me(message):
 
 def get_about_me(message):
     info = message.text
-    menu.profile.set_information(info)
+    menu.array_profiles[message.from_user.id].set_information(info)
 
 
 def finish(message):
     bot.send_message(message.chat.id, 'Анкета успешна создана')
     dao = DataAccessObject()
-    dao.create_user(menu.profile.get_telegram_id(), menu.profile.get_name(), menu.profile.get_gender(), menu.profile.get_age(), menu.profile.get_mode(), menu.profile.get_information())
+    dao.create_user(menu.array_profiles[message.from_user.id].get_telegram_id(), menu.array_profiles[message.from_user.id].get_name(), menu.array_profiles[message.from_user.id].get_gender(), menu.array_profiles[message.from_user.id].get_age(), menu.array_profiles[message.from_user.id].get_mode(), menu.array_profiles[message.from_user.id].get_information())
     dao.show_base()
+
+
+
 
 
 bot.polling(none_stop=True, interval=0)
