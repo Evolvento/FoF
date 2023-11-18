@@ -8,6 +8,7 @@ class Profile:
         self.__photo = None
         self.__information = None
         self.__active = False
+        self.__height = None
         self.__liked = []
 
     def set_telegram_id(self, telegram_id):
@@ -30,6 +31,9 @@ class Profile:
 
     def set_information(self, information):
         self.__information = information
+
+    def set_height(self, height):
+        self.__height = height
 
     def append_liked(self, telegram_id):
         self.__liked.append(telegram_id)
@@ -57,6 +61,9 @@ class Profile:
 
     def get_information(self):
         return self.__information
+
+    def get_height(self):
+        return self.__height
 
     def get_active(self):
         return self.__active
