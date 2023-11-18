@@ -14,10 +14,11 @@ class DataAccessObject:
         self.dao = self.connection.cursor()
         self.dao.execute('''
             CREATE TABLE IF NOT EXISTS OurDataBase (
-            telegram_id TEXT NOT NULL PRIMARY KEY,
+            telegram_id INTEGER NOT NULL PRIMARY KEY,
             name TEXT,
             gender TEXT,
             age INTEGER,
+            height INTEGER,
             mode TEXT,
             information TEXT,
             photo TEXT
@@ -25,10 +26,10 @@ class DataAccessObject:
         ''')
         self.connection.commit()
 
-    def create_user(self, telegram_id, name, gender, age, mode, information, photo):
+    def create_user(self, telegram_id, name, gender, age, height, mode, information, photo):
         self.dao.execute(
-            'INSERT or REPLACE INTO OurDataBase(telegram_id, name, gender, age, mode, information, photo) VALUES(?, ?, ?, ?, ?, ?, ?)',
-            (telegram_id, name, gender, age, mode, information, photo))
+            'INSERT or REPLACE INTO OurDataBase(telegram_id, name, gender, age, height, mode, information, photo) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            (telegram_id, name, gender, age, height, mode, information, photo))
         self.connection.commit()
 
     def edit_user(self, profile):
@@ -39,18 +40,19 @@ class DataAccessObject:
         self.dao.execute(f"DELETE FROM OurDataBase WHERE telegram_id = {profile}")
 
     def commit_changes(self):
-        self.connection.commit()        
+        self.connection.commit()
 
     def close_database(self):
         self.connection.close()
 
-    def return_profiles(self, delta_age, mode, gender):
-        self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY mode HAVING mode = ?', (mode),)
-        if mode == 'fight':
-            self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY gender HAVING gender IS ?', (gender),)
+    def return_profiles(self, min_age, max_age, mode, gender, min_height, max_height):
+        self.dao.execute('SELECT telegram_id FROM OurDataBase WHERE mode = ?', (mode,))
+        if mode == '👊':
+            self.dao.execute('SELECT telegram_id FROM OurDataBase WHERE gender = ?', (gender,))
         else:
-            self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY gender HAVING gender IS NOT ?', (gender))
-        self.dao.execute('SELECT telegram_id FROM OurDataBase GROUP BY age HAVING age >= ? AND age <= ?', (delta_age, delta_age))
+            self.dao.execute('SELECT telegram_id FROM OurDataBase WHERE gender != ?', (gender,))
+        self.dao.execute('SELECT telegram_id FROM OurDataBase WHERE age >= ? AND age <= ?', (min_age, max_age))
+        self.dao.execute('SELECT telegram_id FROM OurDataBase WHERE height >= ? AND height <= ?', (min_height, max_height))
         return self.dao.fetchall()
     
     def show_base(self):
@@ -60,5 +62,5 @@ class DataAccessObject:
             print(row)
 
     def get_user(self, telegram_id):
-        self.dao.execute(f'SELECT * FROM OurDataBase WHERE telegram_id = {telegram_id}')
+        self.dao.execute('SELECT * FROM OurDataBase WHERE telegram_id = ?', (telegram_id,))
         return self.dao.fetchone()

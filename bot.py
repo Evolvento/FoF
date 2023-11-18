@@ -12,7 +12,7 @@ from strategy_fight import StrategyFight
 class Bot:
     def __init__(self):
         self.array_profiles = {}
-        self.bot = telebot.TeleBot('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw')
+        self.bot = telebot.TeleBot('token')
 
         @self.bot.message_handler(commands=['start'])
         def start(message):
@@ -25,16 +25,16 @@ class Bot:
             self.array_profiles[message.from_user.id].set_telegram_id(message.from_user.id)
             self.bot.register_next_step_handler(message, name)
 
-        def like(our_id, liked_id):
-            self.array_profiles[liked_id].append_liked(our_id)
+        def liking(our_id, liked_id):
+            self.array_profiles[liked_id[0]].append_liked(our_id)
 
-        def partner_search(telegram_id):
+        def partner_search(message, telegram_id):
             controller = Controller()
-            if self.array_profiles[telegram_id].get_mode() == 'love':
+            if self.array_profiles[telegram_id].get_mode() == '❤':
                 controller.set_strategy(StrategyLove())
-            if self.array_profiles[telegram_id].get_mode() == 'fight':
+            if self.array_profiles[telegram_id].get_mode() == '👊':
                 controller.set_strategy(StrategyFight())
-            return controller.execute(self.array_profiles[telegram_id])
+            self.array_profiles[message.from_user.id].set_searching(controller.execute(self.array_profiles[telegram_id]))
 
         def name(message):
             self.bot.send_message(message.chat.id, 'Напиши имя', reply_markup=types.ReplyKeyboardRemove())
@@ -61,18 +61,27 @@ class Bot:
         def age(message):
             self.bot.send_message(message.chat.id, 'Сколько тебе лет?', reply_markup=types.ReplyKeyboardRemove())
             self.bot.register_next_step_handler(message, get_age)
-            self.bot.register_next_step_handler(message, mode)
+            self.bot.register_next_step_handler(message, height)
 
         def get_age(message):
             count_years = message.text
-            self.array_profiles[message.from_user.id].set_age(count_years)
+            self.array_profiles[message.from_user.id].set_age(int(count_years))
+
+        def height(message):
+            self.bot.send_message(message.chat.id, 'Укажите свой рост', reply_markup=types.ReplyKeyboardRemove())
+            self.bot.register_next_step_handler(message, get_height)
+            self.bot.register_next_step_handler(message, mode)
+
+        def get_height(message):
+            your_height = message.text
+            self.array_profiles[message.from_user.id].set_height(int(your_height))
 
         def mode(message):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             favorite = types.KeyboardButton('❤')
             fight = types.KeyboardButton('👊')
             markup.add(favorite, fight)
-            self.bot.send_message(message.chat.id, 'Укажи свой интерес', reply_markup=markup)
+            self.bot.send_message(message.chat.id, 'Вы хотите найти отношения или оппонента', reply_markup=markup)
             self.bot.register_next_step_handler(message, get_mode)
             self.bot.register_next_step_handler(message, photo)
 
@@ -88,7 +97,7 @@ class Bot:
         @self.bot.message_handler(content_types=['photo'])
         def get_user_photo(message):
             file_info = self.bot.get_file(message.photo[-1].file_id)
-            file = requests.get('https://api.telegram.org/file/bot{}/{}'.format('6442510200:AAHIEQsXG6ypotSBDDE3lmIj2NksGHrCArw', file_info.file_path))
+            file = requests.get('https://api.telegram.org/file/bot{}/{}'.format('token', file_info.file_path))
             filename = 'Files/photo_{}.jpg'.format(file_info.file_id)
             self.array_profiles[message.from_user.id].set_photo(file_info.file_id)
             with open(filename, 'wb') as f:
@@ -111,6 +120,7 @@ class Bot:
                             self.array_profiles[message.from_user.id].get_name(),
                             self.array_profiles[message.from_user.id].get_gender(),
                             self.array_profiles[message.from_user.id].get_age(),
+                            self.array_profiles[message.from_user.id].get_height(),
                             self.array_profiles[message.from_user.id].get_mode(),
                             self.array_profiles[message.from_user.id].get_information(),
                             self.array_profiles[message.from_user.id].get_photo())
@@ -133,16 +143,55 @@ class Bot:
 
         @self.bot.message_handler(func=lambda m: m.text == "🔍")
         def search(message):
-            partner_id = partner_search(message.from_user.id)
-            info(message, partner_id)
-            main_buttons()
+            if not (self.array_profiles[message.from_user.id].get_active()):
+                partner_search(message, message.from_user.id)
+                self.array_profiles[message.from_user.id].change_active()
+            if len(self.array_profiles[message.from_user.id].get_searching()) != 0:
+                id = self.array_profiles[message.from_user.id].get_searching()[0][0]
+                if id != message.from_user.id:
+                    info(message, id)
+            else:
+                main_buttons(message)
+
+        def searching_buttons(message):
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            like_account = types.KeyboardButton('😻')
+            dislike_account = types.KeyboardButton('💔')
+            exit = types.KeyboardButton('💤')
+            markup.add(like_account, dislike_account, exit)
+            self.bot.send_message(message.chat.id, '😻 \n'
+                                             '💔 \n'
+                                             '💤', reply_markup=markup)
+
+        @self.bot.message_handler(func=lambda m: m.text == "😻")
+        def like(message):
+            liking(message.from_user.id, self.array_profiles[message.from_user.id].get_searching().pop(0))
+            search(message)
+
+        @self.bot.message_handler(func=lambda m: m.text == "💔")
+        def dislike(message):
+            self.array_profiles[message.from_user.id].get_searching().pop(0)
+            search(message)
+
+        @self.bot.message_handler(func=lambda m: m.text == "💤")
+        def exiting(message):
+            main_buttons(message)
 
         def info(message, telegram_id):
-            photography = open('Files/photo_{}.jpg'.format(DataAccessObject().get_user(telegram_id)[6]), 'rb')
-            self.bot.send_photo(message.chat.id, photography, f'{DataAccessObject().get_user(telegram_id)[1]}, '
-                                                         f'{DataAccessObject().get_user(telegram_id)[3]} \n'
-                                                         f'{DataAccessObject().get_user(telegram_id)[5]}')
-            main_buttons(message)
+            photography = open('Files/photo_{}.jpg'.format(DataAccessObject().get_user(telegram_id)[7]), 'rb')
+            if self.array_profiles[int(telegram_id)].get_mode() == '❤':
+                self.bot.send_photo(message.chat.id, photography, f'{DataAccessObject().get_user(telegram_id)[1]}, '
+                                                                  f'{DataAccessObject().get_user(telegram_id)[3]} \n'
+                                                                  f'{DataAccessObject().get_user(telegram_id)[6]}')
+            else:
+                self.bot.send_photo(message.chat.id, photography, f'{DataAccessObject().get_user(telegram_id)[1]}, '
+                                                             f'Рост: {DataAccessObject().get_user(telegram_id)[4]}, '
+                                                             f'{DataAccessObject().get_user(telegram_id)[3]} \n'
+                                                             f'{DataAccessObject().get_user(telegram_id)[6]}')
+            if telegram_id != message.from_user.id:
+                searching_buttons(message)
+            else:
+                main_buttons(message)
 
     def run(self):
         self.bot.polling(none_stop=True, interval=0)
